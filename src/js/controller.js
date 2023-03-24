@@ -1,15 +1,14 @@
 // CONTROLLER WILL ACT AS A BRIDGE
+// MAIN JAVASCRIPT FILE
 
 // imports everything from model.js file
 import * as model from './model.js';
 import recipeView from './views/recipeView.js';
+import searchView from './views/searchView.js';
+import resultsView from './views/resultsView';
 
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-
-// https://forkify-api.herokuapp.com/v2
-
-///////////////////////////////////////
 
 const controlRecipes = async () => {
   try {
@@ -30,14 +29,35 @@ const controlRecipes = async () => {
     // receive the data from step 1 and passing it into the render method and then stores it in the this.#data in the recipeView js file
     recipeView.render(model.state.recipe);
   } catch (err) {
-    alert(`There is an ERRORRR ${err}`);
+    recipeView.renderError();
   }
 };
 
-// Only show recipe if the hash changes(#)
-['hashchange', 'load'].forEach(ev =>
-  window.addEventListener(ev, controlRecipes)
-);
+// a function to search up the recipe
+const controlSearchResults = async () => {
+  try {
+    resultsView.renderSpinner();
+    console.log(resultsView);
 
-// window.addEventListener('hashchange', controlRecipes);
-// window.addEventListener('load', controlRecipes);
+    // 1) Get Search Query
+    const query = searchView.getQuery();
+    // If there isn't then keep going with the application
+    if (!query) return;
+
+    // 2) Load the search results(this file from model)
+    // it is fetching the results with the query at the end of the api site
+    await model.loadSearchResults(query);
+
+    // 3) Render the results
+    console.log(model.state.search.results);
+    resultsView.render(model.state.search.results);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const init = function() {
+  recipeView.addHandleRender(controlRecipes);
+  searchView.addHandlerSearch(controlSearchResults);
+};
+init();
